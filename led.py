@@ -14,7 +14,8 @@ class LED:
     def DutyCycleWrite(self,bright:int):
         self.pwm_led.ChangeDutyCycle(bright)
 
-
+    def digitalWrite(self,onoff:bool):
+        GPIO.output(self.pin,onoff)
 
     def cleanup(self):
         GPIO.cleanup(self.pin)
