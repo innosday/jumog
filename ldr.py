@@ -1,4 +1,4 @@
-import spidev
+import spidev # type: ignore
 
 class LDR:
     def __init__(self,channel:int):

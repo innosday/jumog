@@ -1,5 +1,4 @@
-import RPi.GPIO as GPIO
-import time
+import RPi.GPIO as GPIO # type: ignore
 
 class LED:
     def __init__(self,pin:int):
