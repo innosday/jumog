@@ -1,4 +1,4 @@
-from tkinter import *
+from Tkinter import AppleStyleGUI
 import RPi.GPIO as GPIO # type: ignore
 from led import LED
 from ldr import LDR
@@ -12,24 +12,8 @@ onled = LED(18)
 offled = LED(15)
 #flog = False
 #turnflog = False
-win = Tk()
-win.title("맞춤 조명")
-win.geometry('200x100')
-win.resizable(width = True,height = True)
+win = AppleStyleGUI()
 
-Sensor = Label(win,text="감지 안됨",bg="#fff000",font=('',20),padx=5)
-
-Bright = Label(win,text="OFF",font=('',15))
-
-Sensor.pack()
-Bright.pack()
-
-
-def setSensor(replace):
-    Sensor.config(text=replace)
-
-def setBright(bright):
-    Bright.config(text=bright)
 flog = False
 turnflog = False
 
@@ -45,21 +29,18 @@ def main():
             if flog:
                 flog = False
         if turnflog:
-            setSensor("감지")
             print("사람 감지됨",end=' | ')
             nowBright =100- round((ldr.analogRead()*100)/1023)
-            setBright(f"현재 밝기 : {nowBright}")
             print("현재 밝기",nowBright)
             led.DutyCycleWrite(nowBright)
             onled.DutyCycleWrite(100)
             offled.DutyCycleWrite(0)
         else:
-            setSensor("감지안됨")
             print("사람 감지안됨")
-            setBright("OFF")
             led.DutyCycleWrite(0)
             onled.DutyCycleWrite(0)
             offled.DutyCycleWrite(100)
+        win.update_ui(turnflog, nowBright)
         win.after(100,main)
     except:
         GPIO.cleanup()
