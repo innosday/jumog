@@ -1,4 +1,4 @@
-from Tkinter import AppleStyleGUI
+from gui import AppleStyleGUI
 import RPi.GPIO as GPIO # type: ignore
 from led import LED
 from ldr import LDR
