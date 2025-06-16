@@ -7,12 +7,11 @@ class AppleStyleGUI(tk.Tk):
         self.title("Smart Sensor Dashboard")
         self.geometry("420x300")
         self.configure(bg="#e9ecf0")
-        self.resizable(False, False)
+        self.resizable(True, True)
 
         self.setup_style()
         self.create_widgets()
-        self.update_ui()  # 주기적 UI 업데이트
-
+        
     def setup_style(self):
         style = ttk.Style(self)
         style.theme_use('clam')
