@@ -16,10 +16,12 @@ win = AppleStyleGUI()
 
 flog = False
 turnflog = False
+nowBright = 0
 
 def main():
     global flog
     global turnflog
+    global nowBright
     try:
         if pir.digitalRead():
             if not flog:
@@ -29,14 +31,14 @@ def main():
             if flog:
                 flog = False
         if turnflog:
-            print("사람 감지됨",end=' | ')
             nowBright =100- round((ldr.analogRead()*100)/1023)
-            print("현재 밝기",nowBright)
+            #print("사람 감지됨 현재 밝기",nowBright)
             led.DutyCycleWrite(nowBright)
             onled.DutyCycleWrite(100)
             offled.DutyCycleWrite(0)
         else:
-            print("사람 감지안됨")
+            #print("사람 감지안됨")
+            nowBright = 0
             led.DutyCycleWrite(0)
             onled.DutyCycleWrite(0)
             offled.DutyCycleWrite(100)
