@@ -10,41 +10,75 @@ ldr = LDR(0)
 
 onled = LED(18)
 offled = LED(15)
-#flog = False
-#turnflog = False
 win = AppleStyleGUI()
 
-flog = False
+# state machine
+STATE_IDLE = 0
+STATE_ACTIVE = 1
+STATE_ADJUST = 2
+
 turnflog = False
-nowBright = 0
+prev_pir = pir.digitalRead()
+
+# moving average buffer
+MA_SIZE = 10
+samples = [0] * MA_SIZE
+sample_idx = 0
+sample_count = 0
+sample_sum = 0
+
+target_duty = 0
+current_duty = 0
+MAX_STEP = 5
+state = STATE_IDLE
 
 def main():
-    global flog
-    global turnflog
-    global nowBright
+    global turnflog, prev_pir
+    global samples, sample_idx, sample_count, sample_sum
+    global target_duty, current_duty, state
     try:
-        if pir.digitalRead():
-            if not flog:
-                flog = True
-                turnflog = not turnflog
-        else:
-            if flog:
-                flog = False
+        pir_val = pir.digitalRead()
+        # rising edge toggle
+        if pir_val and not prev_pir:
+            turnflog = not turnflog
+            state = STATE_ACTIVE if turnflog else STATE_IDLE
+        prev_pir = pir_val
+
+        # read sensor and update moving average
+        new_raw = ldr.analogRead()
+        sample_sum -= samples[sample_idx]
+        samples[sample_idx] = new_raw
+        sample_sum += new_raw
+        sample_idx = (sample_idx + 1) % MA_SIZE
+        if sample_count < MA_SIZE:
+            sample_count += 1
+        avg_raw = sample_sum // (sample_count if sample_count else 1)
+
+        if state == STATE_IDLE:
+            target_duty = 0
+        elif state == STATE_ACTIVE:
+            target_duty = 100 - round((avg_raw * 100) / 1023)
+            state = STATE_ADJUST
+        else:  # ADJUST
+            target_duty = 100 - round((avg_raw * 100) / 1023)
+
+        # smooth dimming
+        if current_duty < target_duty:
+            current_duty = min(current_duty + MAX_STEP, target_duty)
+        elif current_duty > target_duty:
+            current_duty = max(current_duty - MAX_STEP, target_duty)
+
+        led.DutyCycleWrite(current_duty)
         if turnflog:
-            nowBright =100- round((ldr.analogRead()*100)/1023)
-            #print("사람 감지됨 현재 밝기",nowBright)
-            led.DutyCycleWrite(nowBright)
             onled.DutyCycleWrite(100)
             offled.DutyCycleWrite(0)
         else:
-            #print("사람 감지안됨")
-            nowBright = 0
-            led.DutyCycleWrite(0)
             onled.DutyCycleWrite(0)
             offled.DutyCycleWrite(100)
-        win.update_ui(turnflog, nowBright)
-        win.after(100,main)
-    except:
+
+        win.update_ui(turnflog, current_duty)
+        win.after(100, main)
+    except Exception:
         GPIO.cleanup()
         win.destory()
 
