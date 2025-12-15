@@ -53,4 +53,3 @@ if __name__ == "__main__":
     win.protocol("closed win",lambda: (led.cleanup(),onled.cleanup(),offled.cleanup(),pir.cleanup(),win.destory()))
     win.after(100,main)
     win.mainloop()
-
