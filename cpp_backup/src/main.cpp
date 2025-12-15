@@ -31,6 +31,12 @@ int main(){
     int currentDuty = 0;
     const int maxStep = 5; // percent per 100ms
 
+    constexpr int MA_SIZE = 10;
+    int samples[MA_SIZE] = {0};
+    int sampleIdx = 0;
+    int sampleCount = 0;
+    int sampleSum = 0;
+
     while(running){
         bool pirVal = pir.digitalRead();
         if(pirVal && !prevPir){ // rising edge
@@ -39,15 +45,22 @@ int main(){
         }
         prevPir = pirVal;
 
+        // read sensor and update moving average
+        int newRaw = ldr.analogRead();
+        sampleSum -= samples[sampleIdx];
+        samples[sampleIdx] = newRaw;
+        sampleSum += newRaw;
+        sampleIdx = (sampleIdx + 1) % MA_SIZE;
+        if(sampleCount < MA_SIZE) ++sampleCount;
+        int avgRaw = sampleSum / (sampleCount ? sampleCount : 1);
+
         if(state == State::IDLE){
             targetDuty = 0;
         } else if(state == State::ACTIVE){
-            int raw = ldr.analogRead();
-            targetDuty = 100 - static_cast<int>(std::round((raw * 100.0) / 1023.0));
+            targetDuty = 100 - static_cast<int>(std::round((avgRaw * 100.0) / 1023.0));
             state = State::ADJUST;
         } else { // ADJUST
-            int raw = ldr.analogRead();
-            targetDuty = 100 - static_cast<int>(std::round((raw * 100.0) / 1023.0));
+            targetDuty = 100 - static_cast<int>(std::round((avgRaw * 100.0) / 1023.0));
         }
 
         // smooth step towards target
